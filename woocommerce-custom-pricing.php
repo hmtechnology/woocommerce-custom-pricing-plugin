@@ -102,6 +102,7 @@ function add_custom_price_fields($user) {
             foreach ($custom_prices as $index => $custom_price) {
                 $product_id = isset($custom_price['product_id']) ? esc_attr($custom_price['product_id']) : '';
                 $price = isset($custom_price['price']) ? esc_attr($custom_price['price']) : '';
+                $note = isset($custom_price['note']) ? esc_attr($custom_price['note']) : ''; // Aggiunto il campo note
                 ?>
                 <tr>
                     <th><label for="custom_price_product_id_<?php echo $index; ?>"><?php _e('Product ID', 'your_textdomain'); ?></label></th>
@@ -115,6 +116,12 @@ function add_custom_price_fields($user) {
                         <input type="number" name="custom_price_product[]" id="custom_price_product_<?php echo $index; ?>" value="<?php echo $price; ?>" class="regular-text" /><br />
                     </td>
                 </tr>
+                <tr>
+                    <th><label for="custom_price_note_<?php echo $index; ?>"><?php _e('Note', 'your_textdomain'); ?></label></th>
+                    <td>
+                        <textarea name="custom_price_note[]" id="custom_price_note_<?php echo $index; ?>" class="regular-text"><?php echo $note; ?></textarea><br />
+                    </td>
+                </tr>
                 <?php
             }
         }
@@ -124,7 +131,7 @@ function add_custom_price_fields($user) {
     <script>
         jQuery(document).ready(function ($) {
             $('#add_custom_price_field').on('click', function () {
-                var index = $('#custom_price_fields tr').length / 2; // Calcola l'indice del nuovo campo
+                var index = $('#custom_price_fields tr').length / 3; // Calcola l'indice del nuovo campo (3 righe per campo)
                 $('#custom_price_fields').append(`
                     <tr>
                         <th><label for="custom_price_product_id_${index}"><?php _e('Product ID', 'your_textdomain'); ?></label></th>
@@ -136,6 +143,12 @@ function add_custom_price_fields($user) {
                         <th><label for="custom_price_product_${index}"><?php _e('Custom Price', 'your_textdomain'); ?></label></th>
                         <td>
                             <input type="number" name="custom_price_product[]" id="custom_price_product_${index}" class="regular-text" /><br />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="custom_price_note_${index}"><?php _e('Note', 'your_textdomain'); ?></label></th>
+                        <td>
+                            <textarea name="custom_price_note[]" id="custom_price_note_${index}" class="regular-text"></textarea><br />
                         </td>
                     </tr>
                 `);
@@ -155,20 +168,22 @@ function save_custom_price_fields($user_id) {
         $custom_prices = array();
         $product_ids = $_POST['custom_price_product_id'];
         $prices = $_POST['custom_price_product'];
+        $notes = isset($_POST['custom_price_note']) ? $_POST['custom_price_note'] : array();
         foreach ($product_ids as $index => $product_id) {
             $product_id = sanitize_text_field($product_id);
             $price = isset($prices[$index]) ? sanitize_text_field($prices[$index]) : '';
+            $note = isset($notes[$index]) ? sanitize_text_field($notes[$index]) : '';
             if (!empty($product_id)) {
                 $custom_prices[] = array(
                     'product_id' => $product_id,
                     'price' => $price,
+                    'note' => $note,
                 );
             }
         }
         update_user_meta($user_id, 'custom_prices', $custom_prices);
     }
 }
-
 
 // Update the product price based on the customer's custom price
 add_filter('woocommerce_get_price_html', 'custom_price_based_on_customer_and_product', 10, 2);
@@ -180,13 +195,103 @@ function custom_price_based_on_customer_and_product($price_html, $product) {
         if (!empty($custom_prices)) {
             foreach ($custom_prices as $custom_price) {
                 if ($custom_price['product_id'] == $product->get_id() && !empty($custom_price['price'])) {
-                    return wc_price($custom_price['price']);
+                    $price_html = wc_price($custom_price['price']);
+                    if (!empty($custom_price['note'])) {
+                        $price_html .= '<br/><small><span class="custom-price-note">' . esc_html($custom_price['note']) . '</span></small>';
+                    }
+                    return $price_html;
                 }
             }
         }
     }
     return $price_html;
 }
+
+// Update cart item price based on customer's custom price
+add_action('woocommerce_before_calculate_totals', 'update_cart_item_custom_price', 10, 1);
+
+function update_cart_item_custom_price($cart) {
+    if (is_admin() && !defined('DOING_AJAX')) {
+        return;
+    }
+
+    if (did_action('woocommerce_before_calculate_totals') >= 2) {
+        return;
+    }
+
+    foreach ($cart->get_cart() as $cart_item) {
+        $product_id = $cart_item['product_id'];
+        $product = wc_get_product($product_id);
+
+        if (is_user_logged_in()) {
+            $current_user = wp_get_current_user();
+            $custom_prices = get_user_meta($current_user->ID, 'custom_prices', true);
+
+            if (!empty($custom_prices)) {
+                foreach ($custom_prices as $custom_price) {
+                    if ($custom_price['product_id'] == $product_id && !empty($custom_price['price'])) {
+                        $cart_item['data']->set_price($custom_price['price']);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Update cart item price based on customer's custom price during checkout
+add_action('woocommerce_before_calculate_totals', 'update_checkout_item_custom_price', 10, 1);
+
+function update_checkout_item_custom_price($cart) {
+    if (is_admin() && !defined('DOING_AJAX')) {
+        return;
+    }
+
+    if (did_action('woocommerce_before_calculate_totals') >= 2) {
+        return;
+    }
+
+    foreach ($cart->get_cart() as $cart_item) {
+        $product_id = $cart_item['product_id'];
+        $product = wc_get_product($product_id);
+
+        if (is_user_logged_in()) {
+            $current_user = wp_get_current_user();
+            $custom_prices = get_user_meta($current_user->ID, 'custom_prices', true);
+
+            if (!empty($custom_prices)) {
+                foreach ($custom_prices as $custom_price) {
+                    if ($custom_price['product_id'] == $product_id && !empty($custom_price['price'])) {
+                        $cart_item['data']->set_price($custom_price['price']);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Save custom price notes as order item meta
+add_action('woocommerce_checkout_create_order_line_item', 'save_custom_price_notes_in_order', 10, 4);
+
+function save_custom_price_notes_in_order($item, $cart_item_key, $values, $order) {
+    $product_id = $item->get_product_id();
+
+    if (is_user_logged_in()) {
+        $current_user = wp_get_current_user();
+        $custom_prices = get_user_meta($current_user->ID, 'custom_prices', true);
+
+        if (!empty($custom_prices)) {
+            foreach ($custom_prices as $custom_price) {
+                if ($custom_price['product_id'] == $product_id && !empty($custom_price['note'])) {
+                    $item->add_meta_data(__('Prezzo Personalizzato', 'woocommerce'), $custom_price['note']);
+                    break;
+                }
+            }
+        }
+    }
+}
+
 
 // Remove button "Add to Cart" if the product is not purchasable or if a custom price is not set
 add_filter('woocommerce_is_purchasable', 'check_product_purchasability', 10, 2);
