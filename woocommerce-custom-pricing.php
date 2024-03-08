@@ -292,6 +292,51 @@ function save_custom_price_notes_in_order($item, $cart_item_key, $values, $order
     }
 }
 
+// Display custom price notes in cart and checkout
+add_filter('woocommerce_get_item_data', 'display_custom_price_notes_in_cart', 10, 2);
+add_filter('woocommerce_order_item_product', 'display_custom_price_notes_in_order', 10, 2);
+
+function display_custom_price_notes_in_cart($cart_data, $cart_item) {
+    if (is_array($cart_data)) {
+        $product_id = $cart_item['product_id'];
+        $product = wc_get_product($product_id);
+
+        if (is_user_logged_in()) {
+            $current_user = wp_get_current_user();
+            $custom_prices = get_user_meta($current_user->ID, 'custom_prices', true);
+
+            if (!empty($custom_prices)) {
+                foreach ($custom_prices as $custom_price) {
+                    if ($custom_price['product_id'] == $product_id && !empty($custom_price['note'])) {
+                        $cart_data[] = array(
+                            'name' => __('Nota', 'woocommerce'),
+                            'value' => $custom_price['note']
+                        );
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return $cart_data;
+}
+
+function display_custom_price_notes_in_order($product, $order_item) {
+    if (is_user_logged_in()) {
+        $current_user = wp_get_current_user();
+        $custom_prices = get_user_meta($current_user->ID, 'custom_prices', true);
+
+        if (!empty($custom_prices)) {
+            foreach ($custom_prices as $custom_price) {
+                if ($custom_price['product_id'] == $product->get_id() && !empty($custom_price['note'])) {
+                    echo '<br/><small><span class="custom-price-note">' . esc_html($custom_price['note']) . '</span></small>';
+                    break;
+                }
+            }
+        }
+    }
+}
 
 // Remove button "Add to Cart" if the product is not purchasable or if a custom price is not set
 add_filter('woocommerce_is_purchasable', 'check_product_purchasability', 10, 2);
