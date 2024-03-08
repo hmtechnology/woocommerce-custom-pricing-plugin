@@ -134,7 +134,7 @@ function add_custom_price_fields($user) {
     <script>
         jQuery(document).ready(function ($) {
             $('#add_custom_price_field').on('click', function () {
-                var index = $('#custom_price_fields tr.custom-price-row').length / 4; // Calcola l'indice del nuovo campo (4 righe per campo)
+                var index = $('#custom_price_fields tr.custom-price-row').length / 4;
                 $('#custom_price_fields').append(`
                     <tr class="custom-price-row">
                         <th><label for="custom_price_product_id_${index}"><?php _e('Product ID', 'your_textdomain'); ?></label></th>
@@ -161,8 +161,8 @@ function add_custom_price_fields($user) {
             });
 
             $(document).on('click', '.remove-custom-price-field', function () {
-                $(this).closest('tr.custom-price-row').prevAll('tr.custom-price-row').slice(0, 3).remove(); // Rimuovi l'intero blocco di campi personalizzati
-                $(this).closest('tr.custom-price-row').remove(); // Rimuovi il bottone di rimozione
+                $(this).closest('tr.custom-price-row').prevAll('tr.custom-price-row').slice(0, 3).remove();
+                $(this).closest('tr.custom-price-row').remove();
             });
         });
     </script>
