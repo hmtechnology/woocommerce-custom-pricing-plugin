@@ -221,7 +221,7 @@ function add_request_quote_button() {
     global $product;
 
     if (!is_product_purchasable($product->get_id())) {
-        echo '<a href="#" class="request-quote-button button">Request a Quote</a>';
+        echo '<a href="/request-a-quote" target="_blank" class="request-quote-button button" style="display: inline-block; padding: 10px 20px; background-color: #007bff;color: #fff; text-decoration: none; border: none; ">Request a Quote</a>';
     }
 }
 
