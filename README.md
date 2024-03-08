@@ -22,8 +22,9 @@ The Custom Pricing and Purchasability Manager plugin provides advanced functiona
 ## Usage
 
 1. Set a price range for products and specify purchasability settings in the WooCommerce product settings.
-2. Set ID and custom prices for each product in the user profile.
-3. Publish your products, and the plugin will handle the display of custom prices and purchasability options on your WooCommerce store.
+2. Create a page with slug "request-a-quote" in which you put a contact form
+3. Set ID and custom prices for each product in the user profile.
+4. Publish your products, and the plugin will handle the display of custom prices and purchasability options on your WooCommerce store.
 
 ## Contributing
 
