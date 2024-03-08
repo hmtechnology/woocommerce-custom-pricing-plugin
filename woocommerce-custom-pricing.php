@@ -104,23 +104,26 @@ function add_custom_price_fields($user) {
                 $price = isset($custom_price['price']) ? esc_attr($custom_price['price']) : '';
                 $note = isset($custom_price['note']) ? esc_attr($custom_price['note']) : ''; // Aggiunto il campo note
                 ?>
-                <tr>
+                <tr class="custom-price-row">
                     <th><label for="custom_price_product_id_<?php echo $index; ?>"><?php _e('Product ID', 'your_textdomain'); ?></label></th>
                     <td>
                         <input type="text" name="custom_price_product_id[]" id="custom_price_product_id_<?php echo $index; ?>" value="<?php echo $product_id; ?>" class="regular-text" /><br />
                     </td>
                 </tr>
-                <tr>
+                <tr class="custom-price-row">
                     <th><label for="custom_price_product_<?php echo $index; ?>"><?php _e('Custom Price', 'your_textdomain'); ?></label></th>
                     <td>
                         <input type="number" name="custom_price_product[]" id="custom_price_product_<?php echo $index; ?>" value="<?php echo $price; ?>" class="regular-text" /><br />
                     </td>
                 </tr>
-                <tr>
+                <tr class="custom-price-row">
                     <th><label for="custom_price_note_<?php echo $index; ?>"><?php _e('Note', 'your_textdomain'); ?></label></th>
                     <td>
                         <textarea name="custom_price_note[]" id="custom_price_note_<?php echo $index; ?>" class="regular-text"><?php echo $note; ?></textarea><br />
                     </td>
+                </tr>
+                <tr class="custom-price-row">
+                    <td colspan="2" style="padding-left: 0;"><button type="button" class="button remove-custom-price-field"><?php _e('Remove Custom Price Field', 'your_textdomain'); ?></button></td>
                 </tr>
                 <?php
             }
@@ -131,27 +134,35 @@ function add_custom_price_fields($user) {
     <script>
         jQuery(document).ready(function ($) {
             $('#add_custom_price_field').on('click', function () {
-                var index = $('#custom_price_fields tr').length / 3; // Calcola l'indice del nuovo campo (3 righe per campo)
+                var index = $('#custom_price_fields tr.custom-price-row').length / 4; // Calcola l'indice del nuovo campo (4 righe per campo)
                 $('#custom_price_fields').append(`
-                    <tr>
+                    <tr class="custom-price-row">
                         <th><label for="custom_price_product_id_${index}"><?php _e('Product ID', 'your_textdomain'); ?></label></th>
                         <td>
                             <input type="text" name="custom_price_product_id[]" id="custom_price_product_id_${index}" class="regular-text" /><br />
                         </td>
                     </tr>
-                    <tr>
+                    <tr class="custom-price-row">
                         <th><label for="custom_price_product_${index}"><?php _e('Custom Price', 'your_textdomain'); ?></label></th>
                         <td>
                             <input type="number" name="custom_price_product[]" id="custom_price_product_${index}" class="regular-text" /><br />
                         </td>
                     </tr>
-                    <tr>
+                    <tr class="custom-price-row">
                         <th><label for="custom_price_note_${index}"><?php _e('Note', 'your_textdomain'); ?></label></th>
                         <td>
                             <textarea name="custom_price_note[]" id="custom_price_note_${index}" class="regular-text"></textarea><br />
                         </td>
                     </tr>
+                    <tr class="custom-price-row">
+                        <td colspan="2" style="padding-left: 0;"><button type="button" class="button remove-custom-price-field"><?php _e('Remove Custom Price Field', 'your_textdomain'); ?></button></td>
+                    </tr>
                 `);
+            });
+
+            $(document).on('click', '.remove-custom-price-field', function () {
+                $(this).closest('tr.custom-price-row').prevAll('tr.custom-price-row').slice(0, 3).remove(); // Rimuovi l'intero blocco di campi personalizzati
+                $(this).closest('tr.custom-price-row').remove(); // Rimuovi il bottone di rimozione
             });
         });
     </script>
