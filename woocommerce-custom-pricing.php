@@ -102,7 +102,7 @@ function add_custom_price_fields($user) {
             foreach ($custom_prices as $index => $custom_price) {
                 $product_id = isset($custom_price['product_id']) ? esc_attr($custom_price['product_id']) : '';
                 $price = isset($custom_price['price']) ? esc_attr($custom_price['price']) : '';
-                $note = isset($custom_price['note']) ? esc_attr($custom_price['note']) : ''; // Aggiunto il campo note
+                $note = isset($custom_price['note']) ? esc_attr($custom_price['note']) : '';
                 ?>
                 <tr class="custom-price-row">
                     <th><label for="custom_price_product_id_<?php echo $index; ?>"><?php _e('Product ID', 'your_textdomain'); ?></label></th>
